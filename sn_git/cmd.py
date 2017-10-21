@@ -75,20 +75,34 @@ class Parser:
 
     def _help_sub(self):
 
+        # list elidgible command before addint the help command
+        HelpAction.commands = self.subparsers.choices
+        choices = list(self.subparsers.choices.keys())
+
         parser_help = self.subparsers.add_parser(
                 'help',
                 usage='help <command>',
                 help='display help for the specified command')
 
-        HelpAction.commands = self.subparsers.choices
 
         parser_help.add_argument(
             'command',
             action=HelpAction,
+            choices=choices,
             help="the command you want help with")
 
 
     def parse(self, args_list):
-        args = self.parser.parse_args(args_list)
+
+        # treat a lone call to help the same as a call to --help
+        if not any(args_list) or (len(args_list) == 1 and args_list[0] == 'help'):
+            args = self.parser.parse_args(['--help'])
+
+            args = self.parser.parse_args(['--help'])
+
+        # otherwise, forward the args to be parsed
+        else:
+            args = self.parser.parse_args(args_list)
+
         args.func(args)
 
