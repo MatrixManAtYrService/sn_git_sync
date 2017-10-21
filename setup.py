@@ -8,8 +8,8 @@ setup(name='sn_git_sync',
       author_email ='gitSnSync@matt.rixman.org',
       license='MPL-2.0',
       keywords='git simplenote sync',
-      packages=['sn_git_sync'],
+      packages=['sn_git'],
       python_requires = '>=3',
-      entry_points={'console_scripts':['sn_git_sync = sn_git_sync.sync:main']}
+      entry_points={'console_scripts':['sngit = sn_git.main:main']}
       )
 
