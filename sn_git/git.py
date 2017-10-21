@@ -8,31 +8,32 @@ import readline
 import argparse
 from collections import namedtuple
 from pathlib import Path
+from enum import Enum
 
 class Agent:
 
-    def _try_configure_repo(self):
+    def configure_repo(self):
 
         # create directory if not exists
-
         if not os.path.exists(self.repo_dir):
             try:
                 os.makedirs(self.repo_dir)
+
             except Exception as ex:
                 print(ex)
                 print("rolling back changes")
                 sh.rm("-rf", self.repo_dir)
-                return false
+                raise ex
+
         if not os.path.exists(os.path.join(os.path.sep, self.repo_dir, '.git')):
             self.git.init()
 
         # add/modify remotes
-
         ConfiguredRemote = namedtuple('ConfiguredRemote', 'name url')
 
         configured_remotes = []
         remote_list_item = re.compile('([a-zA-Z0-9]*)\s*([^ ].*)\s*\(')
-        for line in str(git.remote(verbose=True).stdout, 'utf-8').split('\n'):
+        for line in str(self.git.remote(verbose=True).stdout, 'utf-8').split('\n'):
             matches = remote_list_item.search(line)
             if (matches):
                 configured_remotes.append(ConfiguredRemote(matches.groups()[0],
@@ -52,14 +53,18 @@ class Agent:
         else:
             self.git.remote('add', self.remote_name, self.remote_url)
 
-            # update repo
+        # update repo
+        self.git.pull(self.remote_name, 'master')
 
-        self.git.pull('sn_git', 'master')
+    def commit_changes_and_push(self, message):
+        self.git.add('-A')
+        self.git.commit(['-m', message])
+        self.git.push([self.remote_name, 'master'])
 
 
     def __init__(self, config_dir, repo_name, repo_url):
         self.config_dir = config_dir
-        self.repo_url = repo_url
+        self.remote_url = repo_url
         self.repo_name = repo_name
         self.remote_name = repo_name + "_sngit"
         self.repo_dir= os.path.join(os.path.sep, config_dir, repo_name)
